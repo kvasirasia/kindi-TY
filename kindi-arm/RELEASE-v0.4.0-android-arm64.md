@@ -11,21 +11,22 @@
 
 ---
 
-## What this release adds
+## Version notes
 
-A clean, self-contained ARM64 CPU port of the Kindi 0.4.0 engine that runs the ternary **Bonsai-2B PTQ1_0** model (1.34 GB, type-143 GGUF) on Android phones via Termux — completely offline, no GPU required.
+This port is built on **Kindi v0.4.0** (tag `32bc703`). During development we also reviewed **Kindi v0.5.0** (released around the same time); its CPU path (`kcpu.c`/`cpu.py`) was **byte-identical** to v0.4.0, with changes limited to GPU-only code. The ARM64 port therefore targets the v0.4.0 CPU engine, but the same `kcpu_arm.c`/`cpu.py` changes apply to v0.5.0's CPU code without modification.
 
-**New files:**
-- `kindi/kcpu_arm.c` (443 lines) — scalar ARM64 FP16 kernel (`__fp16`), OpenMP-optional, same layouts/`kc_*` symbols as `kcpu.c`, bit-exact scalar `rows8` first.
-- `kindi/cpu.py` — modified to auto-build/load `libkcpu_arm.so` on aarch64 or when `KINDI_ARM=1`; keeps x86 `kcpu.c` + `libkcpu.so` path untouched.
-- `docs/ANDROID_ARM64_SETUP.md` — end-to-end offline USB/Termux setup guide.
-- `docs/DEVELOPMENT_STATISTICS.md` — how this port was made (time, steps, measurements).
-- `docs/ISSUES_AND_RESOLUTIONS.md` — every problem hit and how it was solved.
-- `RELEASE-v0.4.0-android-arm64.md` — this file.
+**Files changed in this port:**
+- `kindi-arm/kindi/kcpu_arm.c` — **new** (443 lines): scalar ARM64 FP16 kernel (`__fp16`), OpenMP-optional, same layouts/`kc_*` symbols as `kcpu.c`, bit-exact scalar `rows8` first.
+- `kindi-arm/kindi/cpu.py` — **modified** (+26/−4): auto-build/load `libkcpu_arm.so` on aarch64 or when `KINDI_ARM=1`; keeps x86 `kcpu.c` + `libkcpu.so` path untouched.
+- `kindi-arm/docs/ANDROID_ARM64_SETUP.md` — end-to-end offline USB/Termux setup guide.
+- `kindi-arm/docs/DEVELOPMENT_STATISTICS.md` — how this port was made (time, steps, measurements).
+- `kindi-arm/docs/ISSUES_AND_RESOLUTIONS.md` — every problem hit and how it was solved.
+- `kindi-arm/RELEASE-v0.4.0-android-arm64.md` — this file.
 
 **What did not change:**
-- `kindi/kcpu.c` (x86-64) — untouched, byte-identical to upstream.
+- `kindi-arm/kindi/kcpu.c` (x86-64) — untouched, byte-identical to upstream.
 - All other Kindi source files — unchanged.
+- **`kindi-bench` was NOT modified for ARM.** The full 158-item textjobs run used **kindi-bench 0.1.1 as-is** (external clone, `ahtx/kindi-bench`) with a separate runner script (`phone_textjobs.py`, kept in `/tmp/opencode/`, not in this repo). The repo's own `kindi-arm/kindi/bench.py` is unchanged.
 
 ---
 
@@ -69,11 +70,24 @@ Per-category (S23 #1/#2): sentiment 25/30, escalate 28/30, spam 29/30, topic 28/
 ## Files in this release
 
 ```
-kindi/kcpu_arm.c      # ARM64 CPU kernel (new)
-kindi/cpu.py          # auto-build/load libkcpu_arm.so (modified)
-docs/*.md             # setup, statistics, issues (new)
-RELEASE-v0.4.0-android-arm64.md  # this file
+kindi-arm/kindi/kcpu_arm.c   # ARM64 CPU kernel (new)
+kindi-arm/kindi/cpu.py       # auto-build/load libkcpu_arm.so (modified)
+kindi-arm/docs/*.md          # setup, statistics, issues (new)
+kindi-arm/tools/*.py         # test runners: phone_textjobs, phone_tests, phone_ctx_step, http_proxy
+kindi-arm/tools/kindi_post_queue.sh  # post-test queue runner (device serials are placeholders)
+kindi-arm/phone-tests/*.md      # device info + contributing guide for shared results
+kindi-arm/phone-tests/*/        # per-device test results (JSON/logs/txt)
+kindi-arm/RELEASE-*.md       # this file
 ```
+
+---
+
+## Not included (kept off-repo)
+
+- **`kindi-results/*.json`** — device-specific test result data (textjobs outputs, verify logs). Large and device-specific; referenced in `docs/DEVELOPMENT_STATISTICS.md` instead.
+- **`kindi-bench-latest/`** — external kindi-bench 0.1.1 clone; used as-is, not modified. Not part of this port.
+- **`kindi-050-manual.*`, `kindi-video-050*`** — Kindi v0.5.0 reference materials reviewed during development; not part of this port.
+- **`kindi-pack-2b/`** — 1.34 GB model pack (Bonsai-2B PTQ1_0). Too large for the repo; obtain separately.
 
 ---
 

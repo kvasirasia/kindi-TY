@@ -1,0 +1,9 @@
+Full 158-item kbench textjobs on S24 (`RFCX9076A9H`) was launched on 2026-11-15
+and was still running at release time (process PID 27372 on device).
+
+The S24 device is provisioned with the same offline deb toolchain as the S23
+devices (Python 3.14.10, numpy 2.5.4, clang 21.1.8, tmux 3.8) and passed
+smoke + verify (4/4 token-exact, 0.87 tok/s) before textjobs started.
+
+Check `https://github.com/kvasirasia/kindi-TY/tree/add/kindi-arm-android-port/kindi-arm/phone-tests/s24_RFCX9076A9H/`
+for updated results once the run completes.
