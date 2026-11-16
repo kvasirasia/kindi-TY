@@ -22,17 +22,17 @@ export CC=$PREFIX/bin/clang
 export KINDI_CPU_CFLAGS="-O3 -march=armv8.2-a+simd -fno-math-errno"
 export OMP_NUM_THREADS=4
 cd $HOME/kindi-android-test
-python3 smoke.py | tee smoke_<your-serial>.txt
+python3 phone_tests.py | tee smoke_<your-serial>.txt
 python3 run_verify.py | tee verify_clean_<your-serial>.txt
 
 # 2. Phase 1 suite (QA, speed, write, max-context ≤2048)
-python3 tools/phone_tests.py --pack $HOME/kindi-pack-2b --ctx-max 2048 --threads 4 --out phone_tests_<your-serial>.json
+python3 phone_tests.py --pack $HOME/kindi-pack-2b --ctx-max 2048 --threads 4 --out phone_tests_<your-serial>.json
 
 # 3. Full 158-item textjobs (long-running, ~2–3 h at ~1 tok/s)
-python3 tools/phone_textjobs.py --pack $HOME/kindi-pack-2b --ctx 2048 --threads 4 --out phone_textjobs_full_<your-serial>.json
+python3 phone_textjobs.py --pack $HOME/kindi-pack-2b --ctx 2048 --threads 4 --out phone_textjobs_full_<your-serial>.json
 
 # 4. Incremental max-context beyond 2048 (optional, slow — ~1+ hour per step)
-python3 tools/phone_ctx_step.py --pack $HOME/kindi-pack-2b --ctx-max 8192 --threads 4 --start 3072 --out phone_ctx_high_<your-serial>.json
+python3 phone_ctx_step.py --pack $HOME/kindi-pack-2b --ctx-max 8192 --threads 4 --start 3072 --out phone_ctx_high_<your-serial>.json
 ```
 
 ## 2. Create your device directory

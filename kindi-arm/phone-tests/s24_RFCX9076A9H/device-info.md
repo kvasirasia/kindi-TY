@@ -12,19 +12,34 @@
 | File | Description |
 |---|---|
 | `verify_clean.txt` | Smoke + clean verify (`reference.json`) |
-| `textjobs-in-progress.txt` | Status note — full 158-item textjobs still running |
+| `phone_textjobs_full.json` | Full 158-item kbench textjobs (158/158 completed) |
 
 ## Key numbers
 
-- **Verify `reference.json`:** 4/4 PASS, 40/40 token-exact, `ALL_PASS 0.87 tok/s` (ctx 1024)
+- **Verify `reference.json`:** 4/4 PASS, 40/40 token-exact, **0.87 tok/s** (ctx 1024)
 - **Smoke oracle:** `OUT_TOKENS [198, 2, 220, 16, 13, 220, 16, 13]` — matches desktop x86 oracle exactly
 - **Prefill tok/s:** ~1.09–1.10 (32–1024)
 - **Decode tok/s:** ~0.82–0.91 (g16–256)
 - **Write decode tok/s:** ~0.82–0.83 (sentence/paragraph)
 - **Max-context (≤1024):** CTX 256/512/768/1024 all OK (226/453/679/922s)
-- **Max-context (>1024):** CTX 1536/2048 still running at release time (thermal throttling on sustained load)
-- **Textjobs (158 items):** launched 2026-11-15, still running at release time
+- **Textjobs (158 items):** 158/158 completed, wall ~3.1 hours, **110/158 pass = 69.6%**
 
-## Test date
+## Textjobs results by category
 
-2026-11-11 (provisioned/verified); 2026-11-15 (textjobs launched)
+| Category | Pass | Total |
+|---|---|---|
+| sentiment | 25/30 | 30 |
+| escalate | 28/30 | 30 |
+| spam | 29/30 | 30 |
+| topic | 28/30 | 30 |
+| spell | 0/15 | 15 |
+| grammar | 0/12 | 12 |
+| table | 0/5 | 5 |
+| notes | 0/3 | 3 |
+| news | 0/3 | 3 |
+| **TOTAL** | **110/158** | **158** |
+
+## Test dates
+
+- Provisioned/verified: 2026-11-11
+- Textjobs completed: 2026-11-16

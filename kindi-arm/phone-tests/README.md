@@ -13,7 +13,7 @@ tokens, scores, and timings.
 |---|---|---|---|---|---|
 | S23 #1 `RFCX71B5C9K` | Exynos (dm1q) | **4/4 PASS**, 1.33 tok/s | 148/158 = **74%** | 256→4096 OK | complete |
 | S23 #2 `RFCX9011K4E` | Exynos (dm1q) | **4/4 PASS**, 1.30 tok/s | 151/158 = **73%** | 256→2048 OK | complete |
-| S24 `RFCX9076A9H` | Snapdragon 8 Gen 3 (e1s) | **4/4 PASS**, 0.87 tok/s | in progress | 256→1024 OK | textjobs running |
+| S24 `RFCX9076A9H` | Snapdragon 8 Gen 3 (e1s) | **4/4 PASS**, 0.87 tok/s | 158/158 = **69.6%** | 256→1024 OK | complete |
 
 ## Per-device directories
 

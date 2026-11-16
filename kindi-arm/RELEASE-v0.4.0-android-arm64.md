@@ -59,11 +59,11 @@ This port is built on **Kindi v0.4.0** (tag `32bc703`). During development we al
 |---|---|---|---|---|
 | S23 #1 | 148/158 | 110/148 = **74%** | ~2.56 h | killed on final table items |
 | S23 #2 | 151/158 | 110/151 = **73%** | ~2.57 h | killed on final table items |
-| S24 | in progress | — | — | launched 2026-11-15 |
+| S24 | 158/158 | 110/158 = **69.6%** | ~3.1 h | completed |
 
-Per-category (S23 #1/#2): sentiment 25/30, escalate 28/30, spam 29/30, topic 28/30 → classify strong (83–97%). spell 0/15, grammar 0/12 → open-generation correction fails (2B emits think tags instead of direct corrected sentence). table 0/1–0/4 → table items hang.
+Per-category (all 3 devices): sentiment 25/30, escalate 28/30, spam 29/30, topic 28/30 → classify strong (83–97%). spell 0/15, grammar 0/12 → open-generation correction fails (2B emits think tags instead of direct corrected sentence). table 0/5 → table items hang. notes 0/3, news 0/3 → open-generation fails too.
 
-**Headline:** ~73–74% on classify tasks; 0% on spell/grammar/table — a **capability boundary of the 2B ternary model**, not a Kindi engine bug (token-exact verify passes 4/4; classify is strong).
+**Headline:** ~70–74% on classify tasks; 0% on spell/grammar/table/notes/news — a **capability boundary of the 2B ternary model**, not a Kindi engine bug (token-exact verify passes 4/4; classify is strong).
 
 ---
 

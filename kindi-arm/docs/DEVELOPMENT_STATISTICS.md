@@ -16,7 +16,8 @@ Companion to `docs/ISSUES_AND_RESOLUTIONS.md` (problems + fixes) and `docs/ANDRO
 | 2026-11-11 | S24 (`RFCX9076A9H`): Python+toolchain unblocked over USB; smoke PASS; clean verify 4/4 PASS, 0.87 tok/s |
 | 2026-11-11 | S23 #1 textjobs: 148/158 completed, 74% (killed on final table items) |
 | 2026-11-11 | S23 #2 textjobs: 151/158 completed, 73% (killed on final table items) |
-| 2026-11-15 | S24 textjobs launched (PID 27372, in progress at release time) |
+| 2026-11-15 | S24 textjobs launched (PID 27372, killed at 133/158, resumed 2026-11-16) |
+| 2026-11-16 | S24 textjobs completed: 158/158, 110/158 pass = 69.6% |
 | 2026-11-15 | Release docs + statistics written |
 
 ---
@@ -88,5 +89,5 @@ Companion to `docs/ISSUES_AND_RESOLUTIONS.md` (problems + fixes) and `docs/ANDRO
 - NEON-optimized `rows8` in `kcpu_arm.c` (throughput boost only; correctness proven).
 - Full 65-task kbench agent suite (impractical on-device at ~1 tok/s; needs pi/Node/sandbox/server).
 - Incremental max-context beyond 4096 (~1+ hour per step at ~1 tok/s; killed a 5120→12288 run).
-- S24 textjobs completed (in progress at release time).
+
 - `orailnoor/termux-llm` evaluation (next lane after this release).
