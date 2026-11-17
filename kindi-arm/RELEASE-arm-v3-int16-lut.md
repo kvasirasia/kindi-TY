@@ -219,6 +219,7 @@ verify passes there (that is the x86-preserved check).
 
 ## Companions
 - `kindi-arm/docs/ARM-FINALIZATION-2026-11-17.md` — final state + fleet + build flags.
+- `kindi-arm/docs/THERMAL-AND-SUSTAINED-PERFORMANCE.md` — thermal throttling, cooling options, the bandwidth wall, and benchmark methodology.
 - `kindi-arm/phone-tests/FINDINGS-2026-11-17-s24-vs-s23.md` — the measurement forensics (affinity, chipsets, metric).
 - `kindi-arm/docs/COMPARISON-2026-11-17-arm-ternary-engines.md` — where this sits vs MAPLE / tandem.cpp.
 - `kindi-arm/RELEASE-v0.4.0-android-arm64.md` — the original ARM port (historical; this release supersedes its layout).
