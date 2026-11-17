@@ -228,6 +228,7 @@ verify passes there (that is the x86-preserved check).
 - All other Kindi source; `kindi/bench.py`; kindi-bench itself.
 
 ## Companions
+- `kindi-arm/docs/ARM-BENCHMARK-RESULTS.md` — **all test numbers (2B/4B/9B × devices), notes, and the workarounds/gotchas table.**
 - `kindi-arm/docs/ARM-FINALIZATION-2026-11-17.md` — final state + fleet + build flags.
 - `kindi-arm/docs/THERMAL-AND-SUSTAINED-PERFORMANCE.md` — thermal throttling, cooling options, the bandwidth wall, and benchmark methodology.
 - `kindi-arm/phone-tests/FINDINGS-2026-11-17-s24-vs-s23.md` — the measurement forensics (affinity, chipsets, metric).
