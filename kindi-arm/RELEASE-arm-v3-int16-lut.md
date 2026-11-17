@@ -14,8 +14,8 @@ The ARM64 ternary decode kernel was optimized from a scalar FP16 port (**3.3 tok
 **int8-activation + int16 pair-sum-LUT NEON kernel (15.3 tok/s) — a 4.66× speedup** — while staying
 **token-exact** and **matching the fp32 baseline on the full 158-item textjobs bench** (2B). Verified on
 Galaxy S23 (SD 8 Gen 2), S24 (Exynos 2400), and A32 (Dimensity 720); **x86 re-verified unchanged**.
-Runs Bonsai-2 **2B and 4B** — testing the 4B caught and fixed a group-count overflow that crashed anything
-bigger than 2B (see "What was fixed" §3). 4B decode ≈ 7 tok/s on S24.
+Runs Bonsai-2 **2B, 4B, and 9B** — testing the 4B caught and fixed a group-count overflow that crashed anything
+bigger than 2B (see "What was fixed" §3). Decode on S24: 4B ≈ 7 tok/s, 9B ≈ 2.6 tok/s (fits 8 GB with freed RAM).
 
 Final kernel flag: **`-DKINDI_I16_ROWS8`**. Default (no flag) remains the bit-exact branchless v1.
 
@@ -92,6 +92,7 @@ See `kindi-arm/phone-tests/FINDINGS-2026-11-17-s24-vs-s23.md`. Three artifacts w
 |---|---|
 | `reference.json` verify, **2B** ARM v3 (4 prompts × 40 tokens) | **4/4 PASS, 40/40 token-exact** on S23, S24, A32 |
 | `reference-4b.json` verify, **4B** ARM v3 | **39/40** — one deterministic int8 near-tie flip (pos 24; see caveats), identical on S23+S24; **no crash** after the G0 fix |
+| `reference-9b.json` verify, **9B** ARM v3 | prompts 0/2/3 exact (40/40, 13/13, 40/40); prompt 1 = **39/40** (one int8 near-tie, same as 4B). fp32 v1 fully exact → precision, not a bug; G0=96 handled |
 | **textjobs, 158 items, on v3 (2B)** | **identical to the v0 fp32 baseline** (table below) |
 | **x86 re-verify with the `s01` change** | **4/4 token-exact** on the laptop (built `libkcpu.so`, x86 `kcpu.c`) — x86 preserved |
 | **2B regression after the G0 fix** | **4/4 token-exact** (fix did not disturb the 2B) |
@@ -125,7 +126,15 @@ quantization defect. **The int8 activation quantization did not degrade capabili
 The 4B is ~half the 2B's decode (≈2.2× the ternary weights, bandwidth-bound) — as expected. The S23 4B figure
 is throttle-depressed; the S24 cool-start number is the clean one.
 
-Raw results: `kindi-arm/phone-tests/artifacts/kindi-bench-v3-s24.json` (2B), `…-v3-4b-s24.json` / `…-v3-4b-s23.json` (4B), `…-v31-fixed-full.json`.
+**Bonsai-2-9B** (S24, fits with freed RAM):
+| Device | decode g64/g256 tok/s | prefill tok/s | verify | note |
+|---|---|---|---|---|
+| S24 | 2.62 / 2.56 | 2.93 / 2.88 | 39/40* | warm (35→41°C); load 156 s; cool-start ≈ 3.4 expected |
+
+*9B verify: prompts 0/2/3 exact (40/40, **13/13**, 40/40 — prompt 2 expects only 13 tokens), prompt 1 = 39/40
+(one int8 near-tie, same as the 4B). fp32 v1 is fully exact. The 9B is ~2.1× the 4B's weights → ~⅓ the 2B's rate.
+
+Raw results: `kindi-arm/phone-tests/artifacts/kindi-bench-v3-s24.json` (2B), `…-v3-4b-s24.json` / `…-v3-4b-s23.json` (4B), `…-v3-9b-s24.json` (9B), `…-v31-fixed-full.json`.
 
 ---
 
@@ -200,9 +209,10 @@ verify passes there (that is the x86-preserved check).
   on the verify set and matches v0 on all 158 textjobs. On the **4B** the int8 quant flips **one near-tie verify token**
   (39/40, deterministic, context re-converges) — a precision effect of int8 activations, not a defect (the LUT itself is
   exact; fp32 v1 gives 40/40). It is not a bit-for-bit fp32 reproduction; the default (no flag) **v1 path IS bit-exact**.
-- **Model sizes:** runs Bonsai-2 **2B and 4B** on phones (the G0 fix also covers 9B/27B group counts, but those packs are
-  too large for phone RAM — 9B 4.2 GB, 27B 28 GB). **4B textjobs not yet run** (only verify); the 2B textjobs gate is the
-  one fully validated. There is **no 1B** in the Bonsai-2 line.
+- **Model sizes:** runs Bonsai-2 **2B, 4B, and 9B** on phones. The 9B's RAM footprint is its **2.41 GB of weights**
+  (the pack's 4.2 GB disk size includes the source `model.gguf`, which is not loaded) — it **fits an 8 GB S24 with
+  ~3 GB+ freed RAM**, at the edge (load 156 s). The 27B (~7 GB weights) is too large for phones. **4B/9B textjobs not yet
+  run** (only verify); the 2B textjobs gate is the one fully validated. There is **no 1B** in the Bonsai-2 line.
 - **Not yet tested on multilingual / creative / long-form prose** (textjobs is technical/classification). Validate
   on your own domain before production story use.
 - **Single-run speeds.** The 4.66× is from controlled single runs; a repeated-interleaved variance bound is still
