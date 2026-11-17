@@ -12,8 +12,10 @@
 
 The ARM64 ternary decode kernel was optimized from a scalar FP16 port (**3.3 tok/s**) to an
 **int8-activation + int16 pair-sum-LUT NEON kernel (15.3 tok/s) — a 4.66× speedup** — while staying
-**token-exact** and **matching the fp32 baseline on the full 158-item textjobs bench**. Verified on
+**token-exact** and **matching the fp32 baseline on the full 158-item textjobs bench** (2B). Verified on
 Galaxy S23 (SD 8 Gen 2), S24 (Exynos 2400), and A32 (Dimensity 720); **x86 re-verified unchanged**.
+Runs Bonsai-2 **2B and 4B** — testing the 4B caught and fixed a group-count overflow that crashed anything
+bigger than 2B (see "What was fixed" §3). 4B decode ≈ 7 tok/s on S24.
 
 Final kernel flag: **`-DKINDI_I16_ROWS8`**. Default (no flag) remains the bit-exact branchless v1.
 
@@ -61,7 +63,15 @@ one `gemv` call (qkv+gate / q+k+v / ffg+ffu) collided across OpenMP threads → 
 preserved (no barrier). Fix verified on-device. (v3.1 shelved anyway — slower than v3 — but the bug and fix
 are recorded so nobody re-introduces it.)
 
-### 3. Measurement fixes (why earlier phone numbers were wrong)
+### 3. A 4B-only crash found + fixed (group-count overflow)
+Testing the **4B** exposed a real bug the 2B-only validation had missed: `gemv` kept the int8 activation
+scales in a **fixed `float iscale[64], ascale[64]`**. The group count is `G0 = C/128`; the 2B's largest
+C=6144 gives G0=48 (fit), but the **4B ffn-down C=9216 gives G0=72**, overflowing the stack array → **SIGBUS**
+(9B→96, 27B→136 would crash too). The old comment even hardcoded "C <= 6144". **Fix:** size the arrays to
+`G0` (`float iscale[G0], ascale[G0]`). The `T` LUT buffer was already correct (`cpu.py` sizes it to
+`max(width, ffn, …)`). **Verified:** no crash on 4B (S23+S24); **2B regression still 4/4 token-exact**; x86 unchanged.
+
+### 4. Measurement fixes (why earlier phone numbers were wrong)
 See `kindi-arm/phone-tests/FINDINGS-2026-11-17-s24-vs-s23.md`. Three artifacts were corrected:
 - **Android CPU-affinity confinement:** Android 17 confines the adb shell to the **mid cluster** (S24 cores
   4–6), missing the fast prime cores. Escape with `taskset` (below). This — not silicon — made S24 look slow.
@@ -80,10 +90,11 @@ See `kindi-arm/phone-tests/FINDINGS-2026-11-17-s24-vs-s23.md`. Three artifacts w
 ### Correctness
 | Test | Result |
 |---|---|
-| `reference.json` verify (4 prompts × 40 tokens), ARM v3 | **4/4 PASS, 40/40 token-exact** on S23, S24, A32 |
-| **textjobs, 158 items, on v3** | **identical to the v0 fp32 baseline** (table below) |
+| `reference.json` verify, **2B** ARM v3 (4 prompts × 40 tokens) | **4/4 PASS, 40/40 token-exact** on S23, S24, A32 |
+| `reference-4b.json` verify, **4B** ARM v3 | **39/40** — one deterministic int8 near-tie flip (pos 24; see caveats), identical on S23+S24; **no crash** after the G0 fix |
+| **textjobs, 158 items, on v3 (2B)** | **identical to the v0 fp32 baseline** (table below) |
 | **x86 re-verify with the `s01` change** | **4/4 token-exact** on the laptop (built `libkcpu.so`, x86 `kcpu.c`) — x86 preserved |
-| ARM re-verify from the integrated layout | **4/4 token-exact** on S23 (source md5 matches the tested build) |
+| **2B regression after the G0 fix** | **4/4 token-exact** (fix did not disturb the 2B) |
 
 | textjobs task | v0 (fp32) | v3 (int16-LUT) |
 |---|---|---|
@@ -98,13 +109,23 @@ quantization defect. **The int8 activation quantization did not degrade capabili
 148/158; v3 completed all 158.) Raw result: `kindi-arm/phone-tests/artifacts/textjobs_v3.json`.
 
 ### Performance (controlled: big cores, 4 OMP threads, screen awake, steady-state)
+**Bonsai-2-2B:**
 | Device | SoC | decode g64/g256 tok/s | prefill tok/s | verify |
 |---|---|---|---|---|
 | S23 #1 | SD 8 Gen 2 | 15.33 / 14.67 | 19.3 / 18.3 | 4/4 |
 | S24 | Exynos 2400 | 14.19 / 16.81 | 21.6 / 20.0 | 4/4 |
 | A32 | Dimensity 720 | 6.52 / 6.40 | — | 4/4 |
 
-Raw results: `kindi-arm/phone-tests/artifacts/kindi-bench-v3-s24.json`, `…-v31-fixed-full.json`.
+**Bonsai-2-4B** (after the G0 fix):
+| Device | decode g64/g256 tok/s | prefill tok/s | verify | note |
+|---|---|---|---|---|
+| S24 | 7.20 / 6.65 | 7.42 / 6.18 | 39/40 | cool start (25°C), stable affinity 4–9 |
+| S23 #1 | 5.59 / 5.35 | 6.02 / 5.65 | 39/40 | thermally throttled (37°C, cores ~1.2/2.8 GHz) |
+
+The 4B is ~half the 2B's decode (≈2.2× the ternary weights, bandwidth-bound) — as expected. The S23 4B figure
+is throttle-depressed; the S24 cool-start number is the clean one.
+
+Raw results: `kindi-arm/phone-tests/artifacts/kindi-bench-v3-s24.json` (2B), `…-v3-4b-s24.json` / `…-v3-4b-s23.json` (4B), `…-v31-fixed-full.json`.
 
 ---
 
@@ -175,9 +196,13 @@ verify passes there (that is the x86-preserved check).
 ---
 
 ## Honest caveats (read before relying on this)
-- **Not bit-exact with fp32 x86.** v3 quantizes activations to int8 (NMSE ~1.6e-4). It is **token-exact** on the
-  verify set and **matches v0 on all 158 textjobs**, but it is not a bit-for-bit fp32 reproduction. The default
-  (no flag) v1 path IS bit-exact if you need that.
+- **Not bit-exact with fp32 x86.** v3 quantizes activations to int8 (NMSE ~1.6e-4). On the **2B** it is token-exact
+  on the verify set and matches v0 on all 158 textjobs. On the **4B** the int8 quant flips **one near-tie verify token**
+  (39/40, deterministic, context re-converges) — a precision effect of int8 activations, not a defect (the LUT itself is
+  exact; fp32 v1 gives 40/40). It is not a bit-for-bit fp32 reproduction; the default (no flag) **v1 path IS bit-exact**.
+- **Model sizes:** runs Bonsai-2 **2B and 4B** on phones (the G0 fix also covers 9B/27B group counts, but those packs are
+  too large for phone RAM — 9B 4.2 GB, 27B 28 GB). **4B textjobs not yet run** (only verify); the 2B textjobs gate is the
+  one fully validated. There is **no 1B** in the Bonsai-2 line.
 - **Not yet tested on multilingual / creative / long-form prose** (textjobs is technical/classification). Validate
   on your own domain before production story use.
 - **Single-run speeds.** The 4.66× is from controlled single runs; a repeated-interleaved variance bound is still

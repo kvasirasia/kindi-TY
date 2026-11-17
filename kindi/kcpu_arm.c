@@ -322,9 +322,11 @@ static void gemv(Model* m, int n, const Mat* const* A, float* const* y, const fl
   span(A[0]->C / 2, &a, &b);
 #if defined(KINDI_I16_ROWS8) || defined(KINDI_I16_STREAM)
   /* v3: per-128-col-group int8 activation quantisation (bitnet.cpp per_tensor_quant pattern).
-     All threads compute the small scale table redundantly (C <= 6144, negligible). */
+     All threads compute the small scale table redundantly. Sized to G0 = C/128, NOT a fixed 64:
+     2B max C=6144 -> G0=48 fit, but 4B ffn-down C=9216 -> G0=72 (and 9B->96, 27B->136) overflowed
+     a fixed [64] stack array -> SIGBUS on 4B+. A G0-sized VLA handles every model. */
   const int G0 = A[0]->C / 128;
-  float iscale[64], ascale[64];
+  float iscale[G0], ascale[G0];
   for(int g = 0; g < G0; ++g){
     float mx = 0.f;
     for(int e = g * 128; e < (g + 1) * 128; ++e){ const float v = fabsf(x[e]); if(v > mx) mx = v; }

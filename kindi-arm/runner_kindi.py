@@ -42,7 +42,9 @@ lib = eng.lib
 res["so_path"] = getattr(lib, "_name", "?")
 
 # --- token-exact verify (metric identical to kindi.verify.run) ---
-ref = json.load(open(os.path.join(ROOT, "kindi", "reference.json")))
+ref_path = os.environ.get("KINDI_BENCH_REF") or os.path.join(ROOT, "kindi", "reference.json")
+res["reference"] = ref_path
+ref = json.load(open(ref_path))
 ok_all, tok, dt, prompts = True, 0, 0.0, []
 for i, r in enumerate(ref["prompts"]):
     t0 = time.time()

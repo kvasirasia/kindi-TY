@@ -1,0 +1,94 @@
+{
+ "variant": "v3-4b",
+ "pack": "/data/data/com.termux/files/home/kindi-pack-4b",
+ "env": {
+  "OMP_NUM_THREADS": "4",
+  "KINDI_CPU_CFLAGS": "-O3 -march=armv8.2-a -fopenmp -fno-math-errno -ffp-contract=off -DKINDI_I16_ROWS8",
+  "KINDI_CPU_CACHE": "/data/data/com.termux/files/home/.cache/kindi",
+  "KINDI_DEVICE": "cpu"
+ },
+ "status_at_start": {
+  "Threads": "1",
+  "Cpus_allowed_list": "3-7"
+ },
+ "load_log": [
+  "kindi-cpu ready: Ternary-Bonsai-2-4B, 4 threads, ctx 1024 (51.1s)"
+ ],
+ "load_s": 51.12,
+ "so_path": "/data/data/com.termux/files/home/.cache/kindi/libkcpu_arm.so",
+ "reference": "/data/data/com.termux/files/home/kindi-android-test/kindi/reference-4b.json",
+ "verify": {
+  "all_pass": false,
+  "prompts": [
+   {
+    "i": 0,
+    "ok": false,
+    "match": 39,
+    "n": 40,
+    "s": 7.01
+   },
+   {
+    "i": 1,
+    "ok": true,
+    "match": 40,
+    "n": 40,
+    "s": 7.46
+   },
+   {
+    "i": 2,
+    "ok": true,
+    "match": 40,
+    "n": 40,
+    "s": 8.25
+   },
+   {
+    "i": 3,
+    "ok": true,
+    "match": 40,
+    "n": 40,
+    "s": 7.74
+   }
+  ],
+  "blended_tok_s": 6.042
+ },
+ "decode": [
+  {
+   "g": 64,
+   "s": 11.448,
+   "tok_s": 5.591
+  },
+  {
+   "g": 256,
+   "s": 47.837,
+   "tok_s": 5.352
+  }
+ ],
+ "prefill": [
+  {
+   "n": 256,
+   "s": 42.55,
+   "tok_s": 6.017
+  },
+  {
+   "n": 1024,
+   "s": 181.334,
+   "tok_s": 5.647
+  }
+ ],
+ "kc_times_frac": {
+  "0": 0.0001,
+  "1": 0.0052,
+  "2": 0.9197,
+  "3": 0.0341,
+  "4": 0.0321,
+  "5": 0.0081,
+  "6": 0.0008,
+  "7": 0.0
+ },
+ "kc_times_total_s": 314.74,
+ "thread_samples_max": 5,
+ "status_at_end": {
+  "Threads": "4",
+  "Cpus_allowed_list": "3-4,6-7"
+ }
+}
